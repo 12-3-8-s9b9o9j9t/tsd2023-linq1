@@ -1,5 +1,6 @@
 ﻿using GoldSaving.Lib;
 using GoldSaving.Lib.Model;
+using System.Xml.Linq;
 
 // See https://aka.ms/new-console-template for more information
 
@@ -156,3 +157,25 @@ maxprofit = prices.SelectMany(buy => prices.Where(sell => sell.Date > buy.Date),
     .First();
 
 Console.WriteLine($"Buy: {maxprofit.BuyDate.ToShortDateString()}, Sell: {maxprofit.SellDate.ToShortDateString()}, Profit: {Math.Round(maxprofit.Profit, 2)}%");
+
+void save(string filepath, List<GoldPrice> prices)
+{
+    XDocument doc = new XDocument();
+    XElement root = new XElement("GoldPrices");
+    foreach (GoldPrice price in prices)
+    {
+        root.Add(
+            new XElement("GoldPrice",
+                new XElement("Date", price.Date),
+                new XElement("Price", price.Price)));
+    }
+    doc.Add(root);
+    doc.Save(filepath);
+}
+
+save("prices.xml", prices);
+
+XDocument read(string filepath)
+{
+    return XDocument.Load(filepath);
+}
