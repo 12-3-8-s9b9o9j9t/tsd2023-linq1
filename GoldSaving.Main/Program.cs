@@ -107,3 +107,52 @@ foreach (var date in open)
 {
     Console.WriteLine(date.ToShortDateString());
 }
+
+Console.WriteLine("\nWhat are the averages of gold prices in 2020, 2021, 2022?");
+
+Console.WriteLine("Query Syntax:");
+
+var average = from price in prices
+              where price.Date.Year >= 2020
+              group price by price.Date.Year into g
+              select new { Year = g.Key, Average = g.Average(price => price.Price) };
+
+foreach (var avg in average)
+{
+    Console.WriteLine($"Year: {avg.Year}, Average: {Math.Round(avg.Average, 2)}");
+}
+
+Console.WriteLine("Method Syntax:");
+
+average = prices.Where(price => price.Date.Year >= 2020)
+    .GroupBy(price => price.Date.Year)
+    .Select(g => new { Year = g.Key, Average = g.Average(price => price.Price) });
+
+foreach (var avg in average)
+{
+    Console.WriteLine($"Year: {avg.Year}, Average: {Math.Round(avg.Average, 2)}");
+}
+
+Console.WriteLine("\nWhen it would be best to buy gold and sell it between 2019 and 2022?" +
+    "\nWhat would be the return on investment?");
+
+Console.WriteLine("Query Syntax:");
+
+var maxprofit = (from profit in (from buy in prices
+                                 from sell in prices
+                                 where sell.Date > buy.Date
+                                 select new { BuyDate = buy.Date, SellDate = sell.Date, Profit = (sell.Price / buy.Price * 100 - 100) })
+                 orderby profit.Profit descending
+                 select profit)
+            .First();
+
+Console.WriteLine($"Buy: {maxprofit.BuyDate.ToShortDateString()}, Sell: {maxprofit.SellDate.ToShortDateString()}, Profit: {Math.Round(maxprofit.Profit, 2)}%");
+
+Console.WriteLine("Method Syntax:");
+
+maxprofit = prices.SelectMany(buy => prices.Where(sell => sell.Date > buy.Date),
+       (buy, sell) => new { BuyDate = buy.Date, SellDate = sell.Date, Profit = (sell.Price / buy.Price * 100 - 100) })
+    .OrderByDescending(profit => profit.Profit)
+    .First();
+
+Console.WriteLine($"Buy: {maxprofit.BuyDate.ToShortDateString()}, Sell: {maxprofit.SellDate.ToShortDateString()}, Profit: {Math.Round(maxprofit.Profit, 2)}%");
